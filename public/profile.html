@@ -6,6 +6,12 @@
     <title>Profile - Timewind</title>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <meta property="og:title" content="Timewind Profile">
+    <meta property="og:description" content="View and manage your Timewind profile">
+    <meta property="og:image" content="/img/logo-512x.png">
+    <meta property="og:url" content="https://timewind.social/profile">
+    <meta name="theme-color" content="#00B300">
 </head>
     <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
@@ -18,6 +24,7 @@
             <div id="nav-links">
                 <a href="/" class="active">Home</a>
                 <a href="/profile">Profile</a>
+                <a href="/admin">Admin</a>
                 <a href="/register">Register</a>
                 <a href="/login" id="auth-link">Login</a>
             </div>
@@ -27,7 +34,10 @@
         <div id="profile-info">
             <img id="profile-picture" src="" alt="Profile picture" class="profile-picture">
             <div class="profile-details">
-                <h2 id="display-name" class="display-name"></h2>
+                <div class="name-badge-container">
+                    <h2 id="display-name" class="display-name"></h2>
+                    <div id="profile-user-badges" class="profile-user-badges"></div>
+                </div>
                 <div id="username" class="username"></div>
                 <p id="user-bio" class="user-bio"></p>
                 <div class="stats">
@@ -35,6 +45,7 @@
                     <span id="following"></span> following
                 </div>
                 <button id="edit-profile" class="edit-button">Edit Profile</button>
+                <button id="follow-button" class="follow-button" style="display: none;">Follow</button>
             </div>
         </div>
         <div id="edit-profile-modal" class="modal">
@@ -44,7 +55,7 @@
                     <input type="text" id="new-display-name" placeholder="Display name">
                     <input type="text" id="new-username" placeholder="New username">
                     <textarea id="new-bio" placeholder="Write a bio about yourself"></textarea>
-                    <div class="warning-text">Warning: You will be signed out if you change your username. Just sign back in with your new one.</div>
+                    <div class="warning-text">Warning: You might be signed out if you change your username. This is due to token expiration.</div>
                     <div class="image-upload-container">
                         <input type="file" id="profile-picture-input" accept="image/*">
                         <div id="image-preview-container"></div>

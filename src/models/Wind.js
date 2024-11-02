@@ -47,9 +47,31 @@ class Wind {
       userId,
       content: encrypt(content),
       timestamp: new Date().toISOString(),
-      username: userId
+      username: userId,
+      likes: []
     };
     wind.replies.push(reply);
+    this.saveWinds(winds);
+    return reply;
+  }
+
+  likeReply(windId, replyId, userId) {
+    const winds = this.getAllWinds();
+    const wind = winds.find(t => t.id === windId);
+    if (!wind) return null;
+    
+    const reply = wind.replies.find(r => r.id === replyId);
+    if (!reply) return null;
+    
+    if (!reply.likes) reply.likes = [];
+    
+    const likeIndex = reply.likes.indexOf(userId);
+    if (likeIndex === -1) {
+      reply.likes.push(userId);
+    } else {
+      reply.likes.splice(likeIndex, 1);
+    }
+    
     this.saveWinds(winds);
     return reply;
   }

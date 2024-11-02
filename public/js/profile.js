@@ -6,6 +6,7 @@ async function loadProfile() {
     const urlUsername = urlParams.get('username');
     const endpoint = urlUsername ? `/api/users/profile/${urlUsername}` : '/api/users/profile/me';
     const editButton = document.getElementById('edit-profile');
+    const followButton = document.getElementById('follow-button');
 
     const currentUserResponse = await fetch('/api/users/profile/me', {
       headers: {
@@ -28,12 +29,19 @@ async function loadProfile() {
       document.getElementById('following').textContent = '0';
       editButton.textContent = 'Home';
       editButton.addEventListener('click', () => window.location.href = '/');
+      followButton.style.display = 'none';
       throw new Error('Failed to load profile');
     }
 
     const profile = await response.json();
     
     document.getElementById('display-name').textContent = profile.displayName;
+    const badgesContainer = document.getElementById('profile-user-badges');
+    if (badgesContainer) {
+        badgesContainer.innerHTML = profile.badge ? 
+            `<img src="/img/${profile.badge}.svg" alt="${profile.badge}" class="profile-badge-icon" title="${profile.badge}" style="margin-left: 2px; vertical-align: middle;" />` 
+            : '';
+    }
     document.getElementById('username').textContent = `@${profile.username}`;
     document.getElementById('user-bio').textContent = profile.bio || '';
     document.getElementById('followers').textContent = profile.followers;
@@ -42,14 +50,45 @@ async function loadProfile() {
   
     if (currentUser.username === profile.username) {
       editButton.style.display = 'block';
+      followButton.style.display = 'none';
       setupProfileEditing();
     } else {
       editButton.style.display = 'none';
+      followButton.style.display = 'block';
+      followButton.textContent = profile.isFollowing ? 'Unfollow' : 'Follow';
+      setupFollowButton(profile.username);
     }
     await loadUserWinds(profile.username);
   } catch (error) {
     console.error('Error loading profile:', error);
   }
+}
+
+function setupFollowButton(targetUsername) {
+  const followButton = document.getElementById('follow-button');
+  const followersCount = document.getElementById('followers');
+
+  followButton.addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+    const isFollowing = followButton.textContent === 'Unfollow';
+
+    try {
+      const response = await fetch(`/api/users/${isFollowing ? 'unfollow' : 'follow'}/${targetUsername}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        followButton.textContent = isFollowing ? 'Follow' : 'Unfollow';
+        const currentCount = parseInt(followersCount.textContent);
+        followersCount.textContent = isFollowing ? currentCount - 1 : currentCount + 1;
+      }
+    } catch (error) {
+      console.error('Error updating follow status:', error);
+    }
+  });
 }
 
 async function setupProfileEditing() {
@@ -90,7 +129,36 @@ async function setupProfileEditing() {
       cropper.destroy();
       cropper = null;
     }
-    document.getElementById('image-preview-container').innerHTML = '';
+  });
+
+  let cropper = null;
+
+  document.getElementById('profile-picture-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const previewContainer = document.getElementById('image-preview-container');
+        previewContainer.innerHTML = '';
+        
+        const image = document.createElement('img');
+        image.src = event.target.result;
+        previewContainer.appendChild(image);
+
+        if (cropper) {
+          cropper.destroy();
+        }
+
+        cropper = new Cropper(image, {
+          aspectRatio: 1,
+          viewMode: 1,
+          autoCropArea: 1,
+          responsive: true,
+          restore: false
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   form.addEventListener('submit', async (e) => {
@@ -100,12 +168,26 @@ async function setupProfileEditing() {
     const newDisplayName = displayNameInput.value;
     const newUsername = usernameInput.value;
     const newBio = bioInput.value;
-    const profilePicture = document.getElementById('profile-picture-input').files[0];
     
     if (newDisplayName) formData.append('newDisplayName', newDisplayName);
     if (newUsername) formData.append('newUsername', newUsername);
     if (newBio) formData.append('newBio', newBio);
-    if (profilePicture) formData.append('profilePicture', profilePicture);
+
+    if (cropper) {
+      const canvas = cropper.getCroppedCanvas({
+        width: 512,
+        height: 512,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+
+      await new Promise(resolve => {
+        canvas.toBlob(blob => {
+          formData.append('profilePicture', blob, 'profile.jpg');
+          resolve();
+        }, 'image/jpeg', 0.9);
+      });
+    }
 
     try {
       const response = await fetch('/api/users/profile', {
@@ -119,11 +201,9 @@ async function setupProfileEditing() {
       if (!response.ok) throw new Error('Failed to update profile');
 
       const data = await response.json();
-      if (newUsername) {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-        }
-        window.location.href = '/login';
+      if (newUsername && data.token) {
+        localStorage.setItem('token', data.token);
+        window.location.href = '/profile';
       } else {
         window.location.reload();
       }
@@ -131,85 +211,14 @@ async function setupProfileEditing() {
       console.error('Error updating profile:', error);
     }
   });
-  let cropper = null;
 
-  document.getElementById('profile-picture-input').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-          const reader = new FileReader();
-          reader.onload = function(event) {
-              const previewContainer = document.getElementById('image-preview-container');
-              previewContainer.innerHTML = '';
-              
-              const image = document.createElement('img');
-              image.src = event.target.result;
-              previewContainer.appendChild(image);
-  
-              if (cropper) {
-                  cropper.destroy();
-              }
-  
-              cropper = new Cropper(image, {
-                  aspectRatio: 1,
-                  viewMode: 1,
-                  autoCropArea: 1,
-                  responsive: true,
-                  restore: false
-              });
-          };
-          reader.readAsDataURL(file);
-      }
-  });
-  
-  document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData();
-      
-      const newUsername = document.getElementById('new-username').value;
-      if (newUsername) formData.append('newUsername', newUsername);
-  
-      if (cropper) {
-          const canvas = cropper.getCroppedCanvas({
-              width: 512,
-              height: 512,
-              imageSmoothingEnabled: true,
-              imageSmoothingQuality: 'high'
-          });
-  
-          await new Promise(resolve => {
-              canvas.toBlob(blob => {
-                  formData.append('profilePicture', blob, 'profile.jpg');
-                  resolve();
-              }, 'image/jpeg', 0.9);
-          });
-      }
-  
-      try {
-          const response = await fetch('/api/users/profile', {
-              method: 'PUT',
-              headers: {
-                  'Authorization': `Bearer ${localStorage.getItem('token')}`
-              },
-              body: formData
-          });
-  
-          if (!response.ok) throw new Error('Failed to update profile');
-  
-          document.getElementById('edit-profile-modal').classList.remove('active');
-          window.location.reload();
-      } catch (error) {
-          console.error('Error updating profile:', error);
-      }
-  });
-  
   document.querySelector('.cancel-button').addEventListener('click', () => {
-      if (cropper) {
-          cropper.destroy();
-          cropper = null;
-      }
-      document.getElementById('image-preview-container').innerHTML = '';
-      document.getElementById('edit-profile-modal').classList.remove('active');
-  }); 
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+    document.getElementById('image-preview-container').innerHTML = '';
+  });
 }
 
 async function loadUserWinds(username) {
@@ -270,7 +279,12 @@ function createWindElement(wind) {
         <img src="/api/users/profile-picture/${wind.username}" alt="Profile picture" class="wind-profile-pic">
         <div class="wind-user-text">
           <a href="/profile?username=${wind.username}">
-            <span class="display-name">${wind.displayName}</span><br>
+            <div class="name-badge-container">
+              <span class="display-name">${wind.displayName}</span>
+              <div class="user-badges">
+                ${wind.badge ? `<img src="/img/${wind.badge}.svg" alt="${wind.badge}" class="badge-icon" title="${wind.badge}" />` : ''}
+              </div>
+            </div>
             <span class="username">@${wind.username}</span>
           </a>
         </div>
@@ -294,7 +308,12 @@ function createWindElement(wind) {
         </button>
         <span class="likes-count">${wind.likes.length}</span>
       </div>
-      <span>${wind.replies.length} replies</span>
+      <div class="reply-action">
+        <button class="reply-btn">
+          <img src="/img/reply.svg" alt="Reply" class="reply-icon">
+        </button>
+        <span class="replies-count">${wind.replies.length}</span>
+      </div>
       <span>${formattedDate}</span>
     </div>
   `;
@@ -336,6 +355,13 @@ function createWindElement(wind) {
     } catch (error) {
       console.error('Error liking wind:', error);
     }
+  });
+
+  const replyBtn = windElement.querySelector('.reply-btn');
+  replyBtn.addEventListener('click', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const parentWindId = urlParams.get('id') || wind.id;
+    window.location.href = `/wind?id=${parentWindId}`;
   });
 
   if (isOwner) {

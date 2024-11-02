@@ -20,10 +20,24 @@ class User {
         users: [],
         winds: []
       }, null, 2));
+      
+      this.createAdminAccount();
     }
 
     if (!fs.existsSync(this.profilesPath)) {
       fs.mkdirSync(this.profilesPath, { recursive: true });
+    }
+  }
+
+  async createAdminAccount() {
+    const adminExists = this.getAllUsers().find(u => decrypt(u.username) === 'admin');
+    if (!adminExists) {
+      await this.createUser('admin', 'admin@timewind.local', 'admin', '127.0.0.1');
+      const users = this.getAllUsers();
+      const admin = users.find(u => decrypt(u.username) === 'admin');
+      admin.displayName = encrypt('Administrator');
+      admin.badge = 'administrator';
+      this.saveUsers(users);
     }
   }
 
@@ -43,41 +57,34 @@ class User {
 
   async createUser(username, email, password, ip) {
     const users = this.getAllUsers();
+    username = username.toLowerCase();
     
     if (users.find(u => decrypt(u.username) === username)) {
       throw new Error('Username already exists');
     }
-    
-    const defaultImage = await fs.promises.readFile(this.defaultProfilePath);
-    const encryptedUsername = encrypt(username);
-    await fs.promises.writeFile(
-      path.join(this.profilesPath, `${encryptedUsername}.bin`),
-      encrypt(defaultImage.toString('base64'))
-    );
 
-    const location = this.geoip.lookup(ip);
-    const encryptedLocation = location ? encrypt(JSON.stringify({
-      lat: location.ll[0],
-      lon: location.ll[1]
-    })) : null;
+    if (users.find(u => decrypt(u.email) === email.toLowerCase())) {
+      throw new Error('Email already exists');
+    }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const newUser = {
-        username: encrypt(username),
-        displayName: encrypt(username),
-        bio: encrypt(''),
-        email: encrypt(email),
-        password: hashedPassword,
-        location: encryptedLocation,
-        following: [],
-        followers: [],
-        created: new Date().toISOString()
-      };
+      username: encrypt(username),
+      displayName: encrypt(username),
+      bio: encrypt(''),
+      email: encrypt(email.toLowerCase()),
+      password: hashedPassword,
+      location: null,
+      following: [],
+      followers: [],
+      created: new Date().toISOString()
+    };
 
     users.push(newUser);
     this.saveUsers(users);
     return newUser;
   }
+
   async updateProfile(username, newUsername, newDisplayName, newBio, profilePicture) {
     const users = this.getAllUsers();
     const user = users.find(u => decrypt(u.username) === username);
@@ -95,6 +102,12 @@ class User {
     }
 
     if (newUsername && newUsername !== username) {
+      newUsername = newUsername.toLowerCase();
+      
+      if (!/^[a-zA-Z0-9._]+$/.test(newUsername)) {
+        throw new Error('Username can only contain letters, numbers, dots and underscores');
+      }
+      
       if (users.find(u => decrypt(u.username) === newUsername)) {
         throw new Error('Username already taken');
       }
@@ -158,11 +171,49 @@ class User {
       throw new Error('User not found');
     }
 
-    if (!user.following.includes(targetUsername)) {
-      user.following.push(targetUsername);
-      target.followers.push(username);
+    const encryptedUsername = user.username;
+    const encryptedTargetUsername = target.username;
+
+    if (!user.following.includes(encryptedTargetUsername)) {
+      user.following.push(encryptedTargetUsername);
+      target.followers.push(encryptedUsername);
     }
 
+    this.saveUsers(users);
+    return { success: true };
+  }
+
+  unfollowUser(username, targetUsername) {
+    const users = this.getAllUsers();
+    const user = users.find(u => decrypt(u.username) === username);
+    const target = users.find(u => decrypt(u.username) === targetUsername);
+
+    if (!user || !target) {
+      throw new Error('User not found');
+    }
+
+    const encryptedUsername = user.username;
+    const encryptedTargetUsername = target.username;
+
+    user.following = user.following.filter(u => u !== encryptedTargetUsername);
+    target.followers = target.followers.filter(u => u !== encryptedUsername);
+
+    this.saveUsers(users);
+    return { success: true };
+  }
+
+  updateUserBadges(username, badges) {
+    const users = this.getAllUsers();
+    const user = users.find(u => decrypt(u.username) === username);
+    if (!user) throw new Error('User not found');
+    
+    if (decrypt(user.username) === 'admin') {
+      user.badges = ['administrator'];
+      this.saveUsers(users);
+      return user;
+    }
+    
+    user.badges = badges;
     this.saveUsers(users);
     return user;
   }

@@ -43,39 +43,53 @@ router.put('/profile', auth, upload.single('profilePicture'), async (req, res) =
 });
 
 router.get('/profile/me', auth, (req, res) => {
-  const user = User.getAllUsers().find(u => decrypt(u.username) === req.user.username);
+  const users = User.getAllUsers();
+  const user = users.find(u => decrypt(u.username) === req.user.username);
+  
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  res.json({
+  const response = {
     username: decrypt(user.username),
     displayName: decrypt(user.displayName || user.username),
     bio: decrypt(user.bio || ''),
     followers: user.followers.length,
-    following: user.following.length
-  });
+    following: user.following.length,
+    badge: user.badge || null
+  };
+
+  res.json(response);
 });
 
 router.get('/profile/:username', auth, (req, res) => {
-  const user = User.getAllUsers().find(u => decrypt(u.username) === req.params.username);
+  const users = User.getAllUsers();
+  const user = users.find(u => decrypt(u.username) === req.params.username);
   if (!user) {
     return res.json({
       username: 'null',
       displayName: 'Nonexistant User',
       bio: '',
-      followers: 9999,
-      following: 9999
+      followers: 0,
+      following: 0,
+      isFollowing: false,
+      badge: ''
     });
   }
 
-  res.json({
+  const currentUser = users.find(u => decrypt(u.username) === req.user.username);
+
+  const response = {
     username: decrypt(user.username),
     displayName: decrypt(user.displayName || user.username),
     bio: decrypt(user.bio || ''),
     followers: user.followers.length,
-    following: user.following.length
-  });
+    following: user.following.length,
+    isFollowing: user.followers.includes(currentUser.username),
+    badge: user.badge || ''
+  };
+
+  res.json(response);
 });
 
 router.get('/profile-picture/:username', async (req, res) => {
@@ -88,9 +102,22 @@ router.get('/profile-picture/:username', async (req, res) => {
   }
 });
 
-router.post('/follow/:id', auth, (req, res) => {
-  const user = User.followUser(req.user.id, req.params.id);
-  res.json(user);
+router.post('/follow/:username', auth, (req, res) => {
+  try {
+    const result = User.followUser(req.user.username, req.params.username);
+    res.json(result);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+});
+
+router.post('/unfollow/:username', auth, (req, res) => {
+  try {
+    const result = User.unfollowUser(req.user.username, req.params.username);
+    res.json(result);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
 });
 
 module.exports = router;

@@ -4,6 +4,7 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const windRoutes = require('./routes/windRoutes');
 const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const ipDetection = require('./middleware/ipDetection');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use(bodyParser.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/winds', windRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes); 
 
 process.title = "Twitter Clone";
 process.stdout.write('\u001B]0;Twitter Clone\u0007');

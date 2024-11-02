@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Timewind</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <meta property="og:title" content="Join Timewind">
+    <meta property="og:description" content="Create your Timewind account">
+    <meta property="og:image" content="/img/logo-512x.png">
+    <meta property="og:url" content="https://timewind.social/register">
+    <meta name="theme-color" content="#00B300">
 </head>
 <body>
     <header>
@@ -16,6 +22,7 @@
             <div id="nav-links">
                 <a href="/" class="active">Home</a>
                 <a href="/profile">Profile</a>
+                <a href="/admin">Admin</a>
                 <a href="/register">Register</a>
                 <a href="/login" id="auth-link">Login</a>
             </div>
@@ -27,8 +34,16 @@
             <h2>Create Account</h2>
             <form id="register-form">
                 <input type="text" id="username" placeholder="Username" required>
+                <div id="username-error" class="error-message"></div>
                 <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Password" required>
+                <div id="email-error" class="error-message"></div>
+                <div class="password-container">
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="button" class="password-toggle">
+                        <img src="/img/eye.svg" alt="Toggle password visibility" class="eye-icon">
+                    </button>
+                </div>
+                <div id="password-error" class="error-message"></div>
                 <button type="submit">Register</button>
             </form>
             <p>Already have an account? <a href="/login">Login</a></p>

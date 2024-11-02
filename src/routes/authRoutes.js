@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const users = User.getAllUsers();
-        const user = users.find(u => decrypt(u.username) === username);
+        const user = users.find(u => decrypt(u.username) === username.toLowerCase());
 
         if (!user || !await bcrypt.compare(password, user.password)) {
             throw new Error('Invalid credentials');

@@ -10,7 +10,7 @@
   }
   
   header {
-    padding: 1rem;
+    padding: 0.35rem;
     background: linear-gradient(to right, #00B300, #009900);
     color: white;
   }
@@ -38,7 +38,7 @@
   .wind-form {
     margin-bottom: 2rem;
     background: white;
-    border: 1px solid #e1e8ed;
+    border: 1px transparent #e1e8ed;
     border-radius: 8px;
     padding: 1rem;
     position: relative;
@@ -58,6 +58,7 @@
     font-size: 1.1rem;
     resize: vertical;
     transition: border-color 0.2s;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   
   #wind-content:focus {
@@ -70,7 +71,7 @@
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 25px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
@@ -86,7 +87,7 @@
     color: white;
     border: none;
     padding: 0.5rem 1rem;
-    border-radius: 20px;
+    border-radius: 8px;
     cursor: pointer;
   }
 
@@ -132,15 +133,17 @@
     margin-bottom: 1rem;
     border: 1px solid #e1e8ed;
     border-radius: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1rem;
 }
 
-.auth-form button {
+.auth-form button:not(.password-toggle) {
     width: 100%;
     padding: 0.75rem;
     background: #00B300;
     color: white;
     border: none;
-    border-radius: 20px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -222,7 +225,7 @@
     background: #00B300;
     color: white;
     border: none;
-    border-radius: 20px;
+    border-radius: 8px;
     cursor: pointer;
   }
   
@@ -300,7 +303,7 @@
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 8px;
   cursor: pointer;
   margin-top: 1rem;
 }
@@ -315,15 +318,19 @@
     margin-bottom: 1rem;
     border: 1px solid #e1e8ed;
     border-radius: 4px;
-  }
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1rem;
+}
 
-  #new-username {
+#new-username {
     width: 100%;
     padding: 0.75rem;
     margin-bottom: 1rem;
     border: 1px solid #e1e8ed;
     border-radius: 4px;
-  }
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1rem;
+}
 
 .profile-details .display-name {
     font-weight: 700;
@@ -396,7 +403,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 8px;
 }
 
 .options-btn:hover {
@@ -457,6 +464,8 @@
     border-radius: 4px;
     resize: vertical;
     min-height: 100px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1rem;
 }
 
 .like-action {
@@ -575,4 +584,211 @@
 
 .confirm-no:hover {
   background: #7c8895;
+}
+
+.auth-form input.error {
+  border-color: #e0245e;
+}
+
+.error-message {
+  color: #e0245e;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.error-message:empty {
+  display: none;
+}
+
+.reply-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reply-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.reply-btn:hover {
+  background-color: rgba(0, 179, 0, 0.1);
+}
+
+.reply-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.reply-btn:hover .reply-icon {
+  opacity: 1;
+}
+
+.wind-replies {
+  margin-top: 1rem;
+  padding-left: calc(48px + 0.75rem);
+}
+
+.reply-form {
+  margin: 1rem 0;
+  padding-left: calc(48px + 0.75rem);
+}
+
+.reply-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e1e8ed;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+}
+
+.reply-form button {
+  float: right;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.wind-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.original-wind {
+  border-bottom: 1px solid #e1e8ed;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-dashboard {
+  padding: 2rem;
+}
+
+.users-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.users-list th,
+.users-list td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.badge-select {
+  padding: 0.5rem;
+  border: 1px solid #e1e8ed;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.save-badges {
+  background: #00B300;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.badge-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.profile-badge-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.user-badges {
+    display: flex;
+    align-items: center;
+    position: relative;
+    top: 1.45px;
+  }
+
+  .profile-user-badges {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+.name-badge-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: auto;
+    min-width: 0;
+}
+
+.wind-user-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.password-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 40px;
+    margin-bottom: 0;
+}
+
+.password-toggle {
+    position: absolute;
+    left: 90%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    width: 10%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    outline: none;
+}
+
+.password-toggle:hover {
+    background: none !important;
+}
+
+.eye-icon {
+    width: 18px;
+    height: 18px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    color: #536471;
+}
+
+.password-toggle:hover .eye-icon {
+    opacity: 0.8;
 }

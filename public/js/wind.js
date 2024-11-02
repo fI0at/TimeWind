@@ -35,7 +35,12 @@ function createWindElement(wind) {
 				<img src="/api/users/profile-picture/${wind.username}" alt="Profile picture" class="wind-profile-pic">
 				<div class="wind-user-text">
 					<a href="/profile?username=${wind.username}">
-						<span class="display-name">${wind.displayName}</span><br>
+						<div class="name-badge-container">
+							<span class="display-name">${wind.displayName}</span>
+							<div class="user-badges">
+								${wind.badge ? `<img src="/img/${wind.badge}.svg" alt="${wind.badge}" class="badge-icon" title="${wind.badge}" />` : ''}
+							</div>
+						</div>
 						<span class="username">@${wind.username}</span>
 					</a>
 				</div>
@@ -59,7 +64,12 @@ function createWindElement(wind) {
 				</button>
 				<span class="likes-count">${wind.likes.length}</span>
 			</div>
-			<span>${wind.replies.length} replies</span>
+			<div class="reply-action">
+				<button class="reply-btn">
+					<img src="/img/reply.svg" alt="Reply" class="reply-icon">
+				</button>
+				<span class="replies-count">${wind.replies.length}</span>
+			</div>
 			<span>${formattedDate}</span>
 		</div>
 	`;
@@ -173,6 +183,11 @@ function createWindElement(wind) {
 			}
 		});
 	}
+	
+	const replyBtn = windElement.querySelector('.reply-btn');
+	replyBtn.addEventListener('click', () => {
+		window.location.href = `/wind?id=${wind.id}`;
+	});
 	
 	return windElement;
 }

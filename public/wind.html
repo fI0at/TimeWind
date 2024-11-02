@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wind - Timewind</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <meta property="og:title" content="Timewind Wind">
+    <meta property="og:description" content="View this wind on Timewind">
+    <meta property="og:image" content="/img/logo-512x.png">
+    <meta property="og:url" content="https://timewind.social/wind">
+    <meta name="theme-color" content="#00B300">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="header-content" onclick="window.location.href='/'">
+                <img src="/img/logo-42x.png" alt="Logo" class="header-logo" />
+                <h1>Timewind</h1>
+            </div>
+            <div id="nav-links">
+                <a href="/" class="active">Home</a>
+                <a href="/profile">Profile</a>
+                <a href="/admin">Admin</a>
+                <a href="/register">Register</a>
+                <a href="/login" id="auth-link">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="wind-page">
+        <div class="original-wind"></div>
+        <div class="reply-form">
+            <textarea id="reply-content" placeholder="Post your reply"></textarea>
+            <button id="post-reply">Reply</button>
+        </div>
+        <div id="replies"></div>
+    </main>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/wind-page.js"></script>
+</body>
+</html> 
