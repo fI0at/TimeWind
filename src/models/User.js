@@ -8,7 +8,7 @@ class User {
   constructor() {
     this.dbPath = path.join(__dirname, '../data/db.json');
     this.profilesPath = path.join(__dirname, '../data/profiles');
-    this.defaultProfilePath = path.join(__dirname, '../data/profiles/default.png');
+    this.defaultProfilePath = path.join(__dirname, '../../public/img/default-profile.png');
     this.geoip = require('geoip-lite');
     
     if (!fs.existsSync(path.dirname(this.dbPath))) {
