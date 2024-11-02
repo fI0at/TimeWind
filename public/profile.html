@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Timewind</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+</head>
+    <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <header>
+        <nav>
+            <div class="header-content" onclick="window.location.href='/'">
+                <img src="/img/logo-42x.png" alt="Logo" class="header-logo" />
+                <h1>Timewind</h1>
+            </div>
+            <div id="nav-links">
+                <a href="/" class="active">Home</a>
+                <a href="/profile">Profile</a>
+                <a href="/register">Register</a>
+                <a href="/login" id="auth-link">Login</a>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div id="profile-info">
+            <img id="profile-picture" src="" alt="Profile picture" class="profile-picture">
+            <div class="profile-details">
+                <h2 id="display-name" class="display-name"></h2>
+                <div id="username" class="username"></div>
+                <p id="user-bio" class="user-bio"></p>
+                <div class="stats">
+                    <span id="followers"></span> followers ·
+                    <span id="following"></span> following
+                </div>
+                <button id="edit-profile" class="edit-button">Edit Profile</button>
+            </div>
+        </div>
+        <div id="edit-profile-modal" class="modal">
+            <div class="modal-content">
+                <h3>Edit Profile</h3>
+                <form id="edit-profile-form">
+                    <input type="text" id="new-display-name" placeholder="Display name">
+                    <input type="text" id="new-username" placeholder="New username">
+                    <textarea id="new-bio" placeholder="Write a bio about yourself"></textarea>
+                    <div class="warning-text">Warning: You will be signed out if you change your username. Just sign back in with your new one.</div>
+                    <div class="image-upload-container">
+                        <input type="file" id="profile-picture-input" accept="image/*">
+                        <div id="image-preview-container"></div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="submit">Save Changes</button>
+                        <button type="button" class="cancel-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="user-winds"></div>
+    </main>
+    <script src="/js/main.js"></script>
+    <script src="/js/profile.js"></script>
+</body>
+</html>

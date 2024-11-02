@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timewind</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="header-content" onclick="window.location.href='/'">
+                <img src="/img/logo-42x.png" alt="Logo" class="header-logo" />
+                <h1>Timewind</h1>
+            </div>
+            <div id="nav-links">
+                <a href="/" class="active">Home</a>
+                <a href="/profile">Profile</a>
+                <a href="/register">Register</a>
+                <a href="/login" id="auth-link">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="wind-form">
+            <textarea id="wind-content" placeholder="What's happenin'?"></textarea>
+            <button id="post-wind">Post Wind</button>
+        </div>
+        <div id="feed"></div>
+    </main>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/wind.js"></script>
+</body>
+</html>
