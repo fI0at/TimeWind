@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const { encrypt, decrypt } = require('../encryption/crypto');
-const { SALT_ROUNDS } = require('../config/config');
+const { ADMIN_PASSWORD, SALT_ROUNDS } = require('../config/config');
 
 class User {
   constructor() {
@@ -21,7 +21,7 @@ class User {
         winds: []
       }, null, 2));
       
-      this.createAdminAccount();
+      //this.createAdminAccount();
     }
 
     if (!fs.existsSync(this.profilesPath)) {
@@ -32,11 +32,13 @@ class User {
   async createAdminAccount() {
     const adminExists = this.getAllUsers().find(u => decrypt(u.username) === 'admin');
     if (!adminExists) {
-      await this.createUser('admin', 'admin@timewind.local', 'admin', '127.0.0.1');
+      const adminPassword = ADMIN_PASSWORD;
+      await this.createUser('admin', 'admin@timewind.local', adminPassword, '127.0.0.1');
       const users = this.getAllUsers();
       const admin = users.find(u => decrypt(u.username) === 'admin');
-      admin.displayName = encrypt('Administrator');
-      admin.badge = 'administrator';
+      admin.displayName = encrypt('Admin');
+      admin.badge = encrypt('Administrator');
+      admin.bio = encrypt('<span style="font-size: 32px;">System Administrator</span><br>Automatically generated account.');
       this.saveUsers(users);
     }
   }
@@ -55,10 +57,30 @@ class User {
     fs.writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
   }
 
+  validateUsername(username) {
+    if (username.length < 3 || username.length > 16) {
+      throw new Error('Username must be between 3 and 16 characters');
+    }
+
+    if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+      throw new Error('Username can only contain letters, numbers, dots and underscores');
+    }
+
+    if (username.toLowerCase() === 'null' || 
+        username.toLowerCase() === 'undefined' || 
+        username.toLowerCase() === 'deleted_user' ||
+        username.toLowerCase() === 'administrator' ||
+        username.toLowerCase() === 'system') {
+      throw new Error('This username is not allowed');
+    }
+  }
+
   async createUser(username, email, password, ip) {
     const users = this.getAllUsers();
     username = username.toLowerCase();
     
+    this.validateUsername(username);
+
     if (users.find(u => decrypt(u.username) === username)) {
       throw new Error('Username already exists');
     }
@@ -77,7 +99,7 @@ class User {
       location: null,
       following: [],
       followers: [],
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
     };
 
     users.push(newUser);
@@ -94,22 +116,32 @@ class User {
     }
 
     if (newDisplayName) {
-      user.displayName = encrypt(newDisplayName);
+      if (newDisplayName.length > 50) {
+        throw new Error('Display name cannot exceed 50 characters');
+      }
+      const sanitizedDisplayName = username === 'admin' ? newDisplayName : newDisplayName.replace(/<[^>]*>/g, '');
+      user.displayName = encrypt(sanitizedDisplayName);
     }
 
     if (newBio !== undefined) {
-      user.bio = encrypt(newBio);
+      if (newBio.length > 160) {
+        throw new Error('Bio cannot exceed 160 characters');
+      }
+      const sanitizedBio = username === 'admin' ? newBio : newBio.replace(/<[^>]*>/g, '');
+      user.bio = encrypt(sanitizedBio);
     }
 
     if (newUsername && newUsername !== username) {
       newUsername = newUsername.toLowerCase();
       
-      if (!/^[a-zA-Z0-9._]+$/.test(newUsername)) {
-        throw new Error('Username can only contain letters, numbers, dots and underscores');
-      }
+      this.validateUsername(newUsername);
       
       if (users.find(u => decrypt(u.username) === newUsername)) {
         throw new Error('Username already taken');
+      }
+
+      if (decrypt(user.badge) === 'Administrator' && newUsername !== 'admin') {
+        throw new Error('Administrator cannot change their username');
       }
       
       const oldEncryptedUsername = user.username;
@@ -171,15 +203,11 @@ class User {
       throw new Error('User not found');
     }
 
-    const encryptedUsername = user.username;
-    const encryptedTargetUsername = target.username;
-
-    if (!user.following.includes(encryptedTargetUsername)) {
-      user.following.push(encryptedTargetUsername);
-      target.followers.push(encryptedUsername);
+    if (!user.following.includes(target.username)) {
+      user.following.push(target.username);
+      target.followers.push(user.username);
+      this.saveUsers(users);
     }
-
-    this.saveUsers(users);
     return { success: true };
   }
 
@@ -192,12 +220,8 @@ class User {
       throw new Error('User not found');
     }
 
-    const encryptedUsername = user.username;
-    const encryptedTargetUsername = target.username;
-
-    user.following = user.following.filter(u => u !== encryptedTargetUsername);
-    target.followers = target.followers.filter(u => u !== encryptedUsername);
-
+    user.following = user.following.filter(u => u !== target.username);
+    target.followers = target.followers.filter(u => u !== user.username);
     this.saveUsers(users);
     return { success: true };
   }
@@ -207,7 +231,7 @@ class User {
     const user = users.find(u => decrypt(u.username) === username);
     if (!user) throw new Error('User not found');
     
-    if (decrypt(user.username) === 'admin') {
+    if (user.badge && decrypt(user.badge).toLowerCase() === 'administrator') {
       user.badges = ['administrator'];
       this.saveUsers(users);
       return user;
@@ -215,6 +239,23 @@ class User {
     
     user.badges = badges;
     this.saveUsers(users);
+    return user;
+  }
+
+  updateUserLocation(username, location) {
+    const users = this.getAllUsers();
+    const user = users.find(u => decrypt(u.username) === username);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    user.location = location ? encrypt(JSON.stringify(location)) : null;
+    
+    const data = JSON.parse(fs.readFileSync(this.dbPath, 'utf8'));
+    data.users = users;
+    fs.writeFileSync(this.dbPath, JSON.stringify(data, null, 2));
+    
     return user;
   }
 }

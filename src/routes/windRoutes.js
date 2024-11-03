@@ -10,13 +10,13 @@ const router = express.Router();
 router.post('/', auth, (req, res) => {
   const users = User.getAllUsers();
   const user = users.find(u => decrypt(u.username) === req.user.username);
-  const userLocation = user.location ? JSON.parse(decrypt(user.location)) : null;
+  const location = req.body.location || null;
   
-  const wind = Wind.createWind(req.user.id, req.body.content, userLocation);
+  const wind = Wind.createWind(req.user.id, req.body.content, location);
   res.json({
-      ...wind,
-      content: decrypt(wind.content),
-      username: req.user.username
+    ...wind,
+    content: decrypt(wind.content),
+    username: req.user.username
   });
 });
 
@@ -59,7 +59,7 @@ router.get('/feed', auth, (req, res) => {
       content: decrypt(wind.content),
       username: decrypt(windUser.username),
       displayName: decrypt(windUser.displayName || windUser.username),
-      badge: windUser.badge || '',
+      badge: windUser.badge ? decrypt(windUser.badge) : '',
       isLiked: wind.likes.includes(req.user.id)
     };
   })
@@ -96,7 +96,7 @@ router.get('/user/:username?', auth, (req, res) => {
       content: decrypt(wind.content),
       username: decrypt(targetUser.username),
       displayName: decrypt(targetUser.displayName || targetUser.username),
-      badge: targetUser.badge || '',
+      badge: targetUser.badge ? decrypt(targetUser.badge) : '',
       isLiked: wind.likes.includes(req.user.id)
     }))
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -115,7 +115,7 @@ router.delete('/:id', auth, (req, res) => {
       return res.status(404).json({ error: 'Wind not found' });
     }
     
-    if (wind.userId !== req.user.id && user.badge !== 'administrator') {
+    if (wind.userId !== req.user.id && (!user.badge || decrypt(user.badge).toLowerCase() !== 'administrator')) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     
@@ -148,7 +148,7 @@ router.get('/:id', auth, (req, res) => {
     content: decrypt(wind.content),
     username: decrypt(windUser.username),
     displayName: decrypt(windUser.displayName || windUser.username),
-    badge: windUser.badge || '',
+    badge: windUser.badge ? decrypt(windUser.badge) : '',
     isLiked: wind.likes.includes(req.user.id)
   });
 });
@@ -180,7 +180,7 @@ router.get('/:id/replies', auth, (req, res) => {
       content: decrypt(reply.content),
       username: decrypt(replyUser.username),
       displayName: decrypt(replyUser.displayName || replyUser.username),
-      badge: replyUser.badge || '',
+      badge: replyUser.badge ? decrypt(replyUser.badge) : '',
       isLiked: reply.likes?.includes(req.user.id) || false
     };
   });

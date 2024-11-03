@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const User = require('./models/User');
 const authRoutes = require('./routes/authRoutes');
 const windRoutes = require('./routes/windRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -46,3 +47,7 @@ app.use('/api/admin', adminRoutes);
 process.title = "Twitter Clone";
 process.stdout.write('\u001B]0;Twitter Clone\u0007');
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+User.createAdminAccount().catch(err => {
+  console.error('Error creating admin account:', err);
+});

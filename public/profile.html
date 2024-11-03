@@ -41,8 +41,8 @@
                 <div id="username" class="username"></div>
                 <p id="user-bio" class="user-bio"></p>
                 <div class="stats">
-                    <span id="followers"></span> followers ·
-                    <span id="following"></span> following
+                    <a href="#" id="followers"></a> ·
+                    <a href="#" id="following"></a>
                 </div>
                 <button id="edit-profile" class="edit-button">Edit Profile</button>
                 <button id="follow-button" class="follow-button" style="display: none;">Follow</button>
@@ -57,6 +57,7 @@
                     <textarea id="new-bio" placeholder="Write a bio about yourself"></textarea>
                     <div class="warning-text">Warning: You might be signed out if you change your username. This is due to token expiration.</div>
                     <div class="image-upload-container">
+                        <label for="profile-picture-input">Choose Profile Picture</label>
                         <input type="file" id="profile-picture-input" accept="image/*">
                         <div id="image-preview-container"></div>
                     </div>

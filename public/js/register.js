@@ -63,8 +63,18 @@ class Auth {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
+    if (username.length < 3 || username.length > 16) {
+      this.showError('username', 'Username must be between 3 and 16 characters');
+      return;
+    }
+
     if (!/^[a-zA-Z0-9._]+$/.test(username)) {
       this.showError('username', 'Username can only contain letters, numbers, dots and underscores');
+      return;
+    }
+
+    if (username.toLowerCase() === 'null') {
+      this.showError('username', 'This username is not allowed');
       return;
     }
 

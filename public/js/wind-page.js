@@ -1,3 +1,16 @@
+function sanitizeContent(content, username, badge) {
+  if (badge?.toLowerCase() === 'administrator') return content;
+  return content.replace(/<[^>]*>/g, '');
+}
+
+function formatUserMentions(content, currentUsername, authorUsername, authorBadge) {
+  content = sanitizeContent(content, authorUsername, authorBadge);
+  return content.replace(/@(\w+)/g, (match, username) => {
+    const isSelf = username === currentUsername;
+    return `<a href="/profile?username=${username}" class="mention${isSelf ? ' mention-self' : ''}">${match}</a>`;
+  });
+}
+
 function createWindElement(wind) {
   const windElement = document.createElement('div');
   windElement.className = 'wind';
@@ -5,6 +18,8 @@ function createWindElement(wind) {
   const loggedInUsername = getLoggedInUsername();
   const isOwner = wind.username === loggedInUsername;
   const isLiked = wind.isLiked || false;
+  const formattedContent = formatUserMentions(wind.content, loggedInUsername, wind.username, wind.badge);
+  
   const formattedDate = new Date(wind.timestamp).toLocaleString('en-US', {
     month: 'numeric',
     day: 'numeric',
@@ -33,7 +48,7 @@ function createWindElement(wind) {
                 ${wind.badge ? `<img src="/img/${wind.badge}.svg" alt="${wind.badge}" class="badge-icon" title="${wind.badge}" />` : ''}
               </div>
             </div>
-            <span class="username">@${wind.username}</span>
+            ${wind.username === 'admin' ? '' : `<span class="username">@${wind.username}</span>`}
           </a>
         </div>
       </div>
@@ -48,7 +63,7 @@ function createWindElement(wind) {
         </div>
       ` : ''}
     </div>
-    <p>${wind.content}</p>
+    <p>${formattedContent}</p>
     <div class="wind-actions">
       <div class="like-action ${isLiked ? 'liked' : ''}">
         <button class="like-btn">
@@ -64,7 +79,9 @@ function createWindElement(wind) {
           <span class="replies-count">${replies.length}</span>
         </div>
       ` : ''}
-      <span>${formattedDate}</span>
+      <div class="timestamp-action">
+        <span>${formattedDate}</span>
+      </div>
     </div>
   `;
 

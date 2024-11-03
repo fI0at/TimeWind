@@ -16,6 +16,12 @@ async function loadUsers() {
     const tableBody = document.getElementById('users-table-body');
     tableBody.innerHTML = '';
 
+    const currentUser = await fetch('/api/users/profile/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }).then(res => res.json());
+
     users.forEach(user => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -25,16 +31,18 @@ async function loadUsers() {
           ${user.badge ? `<img src="/img/${user.badge}.svg" alt="${user.badge}" class="badge-icon" />` : ''}
         </td>
         <td>
-          ${user.username === 'admin' ? `
+          ${user.username === currentUser.username || (user.badge === 'Administrator' && currentUser.username !== 'admin') ? `
             <select class="badge-select" disabled>
-              <option value="administrator" selected>Administrator</option>
+              <option value="${user.badge}" selected>${user.badge || 'None'}</option>
             </select>
             <button class="save-badge" disabled>Save</button>
           ` : `
             <select class="badge-select">
               <option value="" ${!user.badge ? 'selected' : ''}>None</option>
               <option value="verified" ${user.badge === 'verified' ? 'selected' : ''}>Verified</option>
-              <option value="administrator" ${user.badge === 'administrator' ? 'selected' : ''}>Administrator</option>
+              ${currentUser.username === 'admin' ? `
+                <option value="Administrator" ${user.badge === 'Administrator' ? 'selected' : ''}>Administrator</option>
+              ` : ''}
             </select>
             <button class="save-badge" data-username="${user.username}">Save</button>
           `}

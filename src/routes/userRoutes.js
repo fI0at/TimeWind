@@ -56,19 +56,21 @@ router.get('/profile/me', auth, (req, res) => {
     bio: decrypt(user.bio || ''),
     followers: user.followers.length,
     following: user.following.length,
-    badge: user.badge || null
+    badge: user.badge ? decrypt(user.badge) : null
   };
 
   res.json(response);
 });
 
 router.get('/profile/:username', auth, (req, res) => {
+  const username = req.params.username;
   const users = User.getAllUsers();
-  const user = users.find(u => decrypt(u.username) === req.params.username);
+  const user = users.find(u => decrypt(u.username) === username);
+  
   if (!user) {
     return res.json({
       username: 'null',
-      displayName: 'Nonexistant User',
+      displayName: 'Nonexistent User',
       bio: '',
       followers: 0,
       following: 0,
@@ -78,6 +80,7 @@ router.get('/profile/:username', auth, (req, res) => {
   }
 
   const currentUser = users.find(u => decrypt(u.username) === req.user.username);
+  const isOwnProfile = req.user.username === decrypt(user.username);
 
   const response = {
     username: decrypt(user.username),
@@ -86,7 +89,7 @@ router.get('/profile/:username', auth, (req, res) => {
     followers: user.followers.length,
     following: user.following.length,
     isFollowing: user.followers.includes(currentUser.username),
-    badge: user.badge || ''
+    badge: user.badge ? decrypt(user.badge) : ''
   };
 
   res.json(response);
@@ -117,6 +120,62 @@ router.post('/unfollow/:username', auth, (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(404).json({ error: error.message });
+  }
+});
+
+router.get('/:username/:type', auth, (req, res) => {
+  try {
+    const { username, type } = req.params;
+    
+    if (type !== 'followers' && type !== 'following') {
+      return res.status(400).json({ error: 'Invalid connection type' });
+    }
+
+    const users = User.getAllUsers();
+    const targetUser = users.find(u => decrypt(u.username) === username);
+    const currentUser = users.find(u => decrypt(u.username) === req.user.username);
+    const isOwnProfile = req.user.username === username;
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const connections = type === 'followers' ? targetUser.followers : targetUser.following;
+    
+    if (connections.length === 0) {
+      const sadQuotes = type === 'followers' 
+        ? ["Desperate times call for desperate measures.", "Nobody here but us chickens.", "It's lonely at the bottom."]
+        : ["Make some friends maybe.", "Time to go outside.", "The void stares back."];
+      return res.json({
+        displayName: decrypt(targetUser.displayName || targetUser.username),
+        connections: [],
+        emptyMessage: sadQuotes[Math.floor(Math.random() * sadQuotes.length)]
+      });
+    }
+
+    const connectionUsers = connections
+      .map(encryptedUsername => {
+        const user = users.find(u => u.username === encryptedUsername);
+        if (!user) return null;
+
+        return {
+          username: decrypt(user.username),
+          displayName: decrypt(user.displayName || user.username),
+          badge: user.badge ? decrypt(user.badge) : '',
+          followers: user.followers.length,
+          following: user.following.length,
+          isFollowedByMe: currentUser.following.includes(user.username),
+          followsMe: user.following.includes(currentUser.username)
+        };
+      })
+      .filter(user => user !== null);
+
+    res.json({
+      displayName: decrypt(targetUser.displayName || targetUser.username),
+      connections: connectionUsers
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

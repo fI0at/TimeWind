@@ -1,3 +1,13 @@
+function getLoggedInUsername() {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const payload = JSON.parse(window.atob(base64));
+  return payload.username;
+}
+
 async function loadProfile() {
   const token = localStorage.getItem('token');
 
@@ -21,31 +31,25 @@ async function loadProfile() {
       }
     });
 
-    if (!response.ok) {
-      document.getElementById('display-name').textContent = 'Nonexistant User';
-      document.getElementById('username').textContent = '@null';
-      document.getElementById('profile-picture').src = '/img/default-profile.png';
-      document.getElementById('followers').textContent = '0';
-      document.getElementById('following').textContent = '0';
-      editButton.textContent = 'Home';
-      editButton.addEventListener('click', () => window.location.href = '/');
-      followButton.style.display = 'none';
-      throw new Error('Failed to load profile');
-    }
-
     const profile = await response.json();
     
     document.getElementById('display-name').textContent = profile.displayName;
     const badgesContainer = document.getElementById('profile-user-badges');
     if (badgesContainer) {
         badgesContainer.innerHTML = profile.badge ? 
-            `<img src="/img/${profile.badge}.svg" alt="${profile.badge}" class="profile-badge-icon" title="${profile.badge}" style="margin-left: 2px; vertical-align: middle;" />` 
+            `<img src="/img/${profile.badge.toLowerCase()}.svg" alt="${profile.badge}" class="profile-badge-icon" title="${profile.badge}" style="margin-left: 2px; vertical-align: middle;" />` 
             : '';
     }
     document.getElementById('username').textContent = `@${profile.username}`;
-    document.getElementById('user-bio').textContent = profile.bio || '';
-    document.getElementById('followers').textContent = profile.followers;
-    document.getElementById('following').textContent = profile.following;
+    const formattedBio = formatUserMentions(profile.bio || '', currentUser.username, profile.username, profile.badge);
+    document.getElementById('user-bio').innerHTML = formattedBio;
+
+    const followersLink = `<a href="/connections?username=${profile.username}&type=followers">${profile.followers} followers</a>`;
+
+    const followingLink = `<a href="/connections?username=${profile.username}&type=following">${profile.following} following</a>`;
+
+    document.getElementById('followers').innerHTML = followersLink;
+    document.getElementById('following').innerHTML = followingLink;
     document.getElementById('profile-picture').src = `/api/users/profile-picture/${profile.username}`;
   
     if (currentUser.username === profile.username) {
@@ -58,15 +62,34 @@ async function loadProfile() {
       followButton.textContent = profile.isFollowing ? 'Unfollow' : 'Follow';
       setupFollowButton(profile.username);
     }
-    await loadUserWinds(profile.username);
+    if (!response.ok || response.status === 404) {
+      document.getElementById('display-name').textContent = 'Nonexistent User';
+      document.getElementById('username').textContent = '@null';
+      document.getElementById('profile-picture').src = '/img/deleted-profile.png';
+      document.getElementById('followers').textContent = '';
+      document.getElementById('following').textContent = '';
+      document.getElementById('user-bio').textContent = '';
+      editButton.textContent = 'Home';
+      editButton.style.display = 'block';
+      editButton.onclick = () => window.location.href = '/';
+      followButton.style.display = 'none';
+      document.getElementById('user-winds').innerHTML = '';
+      return;
+    } else {
+      await loadUserWinds(profile.username);
+    }
+    if (profile.username === 'admin') {
+      document.getElementById('username').remove();
+    }
   } catch (error) {
     console.error('Error loading profile:', error);
   }
 }
 
-function setupFollowButton(targetUsername) {
+async function setupFollowButton(targetUsername) {
   const followButton = document.getElementById('follow-button');
-  const followersCount = document.getElementById('followers');
+  const followersElement = document.getElementById('followers');
+  const followersCount = parseInt(followersElement.textContent.split(' ')[0]);
 
   followButton.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
@@ -81,9 +104,12 @@ function setupFollowButton(targetUsername) {
       });
 
       if (response.ok) {
+        const result = await response.json();
         followButton.textContent = isFollowing ? 'Follow' : 'Unfollow';
-        const currentCount = parseInt(followersCount.textContent);
-        followersCount.textContent = isFollowing ? currentCount - 1 : currentCount + 1;
+        const newCount = isFollowing ? followersCount - 1 : followersCount + 1;
+        followersElement.innerHTML = `<a href="/connections?username=${targetUsername}&type=followers">${newCount} followers</a>`;
+      } else {
+        console.error('Failed to update follow status');
       }
     } catch (error) {
       console.error('Error updating follow status:', error);
@@ -108,15 +134,15 @@ async function setupProfileEditing() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Failed to load profile data');
-      
+
       const profile = await response.json();
-      
+
       displayNameInput.value = profile.displayName || '';
       usernameInput.value = profile.username || '';
       bioInput.value = profile.bio || '';
-      
+
       modal.classList.add('active');
     } catch (error) {
       console.error('Error loading profile data:', error);
@@ -160,7 +186,6 @@ async function setupProfileEditing() {
       reader.readAsDataURL(file);
     }
   });
-
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -169,9 +194,16 @@ async function setupProfileEditing() {
     const newUsername = usernameInput.value;
     const newBio = bioInput.value;
     
+    if (newUsername && newUsername.toLowerCase() === 'null') {
+      alert('This username is not allowed');
+      return;
+    }
+    
     if (newDisplayName) formData.append('newDisplayName', newDisplayName);
     if (newUsername) formData.append('newUsername', newUsername);
     if (newBio) formData.append('newBio', newBio);
+    console.log(formData);
+    console.log("bing");
 
     if (cropper) {
       const canvas = cropper.getCroppedCanvas({
@@ -245,16 +277,6 @@ async function loadUserWinds(username) {
   }
 }
 
-function getLoggedInUsername() {
-  const token = localStorage.getItem('token');
-  if (!token) return null;
-  
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const payload = JSON.parse(window.atob(base64));
-  return payload.username;
-}
-
 function createWindElement(wind) {
   const windElement = document.createElement('div');
   windElement.className = 'wind';
@@ -262,6 +284,8 @@ function createWindElement(wind) {
   const loggedInUsername = getLoggedInUsername();
   const isOwner = wind.username === loggedInUsername;
   const isLiked = wind.isLiked;
+  
+  const formattedContent = formatUserMentions(wind.content, loggedInUsername, wind.username, wind.badge);
   
   const timestamp = new Date(wind.timestamp);
   const formattedDate = timestamp.toLocaleDateString('en-US', {
@@ -285,7 +309,7 @@ function createWindElement(wind) {
                 ${wind.badge ? `<img src="/img/${wind.badge}.svg" alt="${wind.badge}" class="badge-icon" title="${wind.badge}" />` : ''}
               </div>
             </div>
-            <span class="username">@${wind.username}</span>
+            ${wind.username === 'admin' ? '' : `<span class="username">@${wind.username}</span>`}
           </a>
         </div>
       </div>
@@ -300,7 +324,7 @@ function createWindElement(wind) {
         </div>
       ` : ''}
     </div>
-    <p>${wind.content}</p>
+    <p>${formattedContent}</p>
     <div class="wind-actions">
       <div class="like-action ${isLiked ? 'liked' : ''}">
         <button class="like-btn">
@@ -314,7 +338,9 @@ function createWindElement(wind) {
         </button>
         <span class="replies-count">${wind.replies.length}</span>
       </div>
-      <span>${formattedDate}</span>
+      <div class="timestamp-action">
+        <span>${formattedDate}</span>
+      </div>
     </div>
   `;
 
@@ -436,6 +462,19 @@ function createWindElement(wind) {
   }
   
   return windElement;
+}
+
+function sanitizeContent(content, username, badge) {
+  if (badge?.toLowerCase() === 'administrator') return content;
+  return content.replace(/<[^>]*>/g, '');
+}
+
+function formatUserMentions(content, currentUsername, authorUsername, authorBadge) {
+  content = sanitizeContent(content, authorUsername, authorBadge);
+  return content.replace(/@(\w+)/g, (match, username) => {
+    const isSelf = username === currentUsername;
+    return `<a href="/profile?username=${username}" class="mention${isSelf ? ' mention-self' : ''}">${match}</a>`;
+  });
 }
 
 document.addEventListener('DOMContentLoaded', loadProfile);

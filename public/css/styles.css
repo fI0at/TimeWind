@@ -109,11 +109,25 @@
 
 .wind-actions {
     display: flex;
+    justify-content: space-between;
     gap: 1rem;
     margin-top: 0.5rem;
     color: #536471;
     font-size: 0.9rem;
 }
+
+.like-action, .reply-action, .timestamp-action {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.timestamp-action {
+    margin-bottom: 0.56px;
+    flex: 1;
+    justify-content: left;
+}
+
 .auth-form {
     max-width: 400px;
     margin: 2rem auto;
@@ -269,17 +283,35 @@
 
 .image-upload-container {
     margin: 1rem 0;
+    text-align: center;
+}
+
+#profile-picture-input {
+    display: none;
+}
+
+.image-upload-container label {
+    background: #00B300;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.image-upload-container label:hover {
+    background: #009900;
 }
 
 #image-preview-container {
-    margin-top: 1rem;
-    max-height: 400px;
-    overflow: hidden;
+    max-width: 300px;
+    margin: 0 auto;
 }
 
 #image-preview-container img {
     max-width: 100%;
-    display: block;
+    border-radius: 8px;
 }
 
 .modal-buttons {
@@ -695,6 +727,7 @@
   border: 1px solid #e1e8ed;
   border-radius: 4px;
   margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .save-badges {
@@ -791,4 +824,225 @@
 
 .password-toggle:hover .eye-icon {
     opacity: 0.8;
+}
+
+.connection-item {
+    padding: 1rem;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+.connection-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+    padding-right: 120px;
+}
+
+.connection-profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.connection-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.connection-stats {
+    color: #536471;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+#connections-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e1e8ed;
+    margin: 0;
+}
+
+.connection-item .follow-button,
+.connection-item .unfollow-button {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.stats a {
+    color: #536471;
+    text-decoration: none;
+}
+
+.stats a:hover {
+    text-decoration: none;
+}
+
+.connection-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.connection-details {
+  flex: 1;
+}
+
+.follow-button-container {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 110px;
+  text-align: right;
+}
+
+.follow-button,
+.unfollow-button {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.name-badge-container {
+  cursor: pointer;
+}
+
+.connection-item .display-name {
+  color: #000;
+  text-decoration: none;
+}
+
+.connection-item .display-name:hover {
+  text-decoration: underline;
+}
+
+.connection-stats a {
+  color: #536471;
+  text-decoration: none;
+}
+
+.connection-stats a:hover {
+  text-decoration: underline;
+  color: #536471;
+}
+
+.connection-item .name-badge-container {
+  cursor: pointer;
+}
+
+.profile-details .name-badge-container {
+  cursor: default;
+}
+
+.empty-connections-message {
+  text-align: center;
+  color: #536471;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.privacy-settings {
+    margin: 1rem 0;
+}
+
+.toggle-setting {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.5rem 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #00B300;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.stats-hidden {
+    color: #536471;
+    cursor: not-allowed;
+    text-decoration: none !important;
+}
+
+.stats span.stats-hidden:hover {
+    text-decoration: none !important;
+    color: #536471;
+}
+
+.connection-stats .stats-hidden {
+  color: #536471;
+  cursor: not-allowed;
+  text-decoration: none !important;
+}
+
+.connection-stats .stats-hidden:hover {
+  text-decoration: none !important;
+  color: #536471;
+}
+
+.save-badge {
+  vertical-align: middle;
+}
+
+.mention {
+  color: #00B300;
+  text-decoration: none;
+}
+
+.mention:hover {
+  text-decoration: underline;
+}
+
+.mention-self {
+  background: rgb(0 255 61 / 24%);
+  border-radius: 6px;
+  padding: 2px 4px;
 }

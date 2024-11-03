@@ -34,6 +34,7 @@ class AlgorithmService {
     const followWeight = 2.0;
     const selfWeight = 3.0;
     const locationWeight = 2.5;
+    const verifiedWeight = 1.5;
 
     const ageInHours = (new Date() - new Date(wind.timestamp)) / (1000 * 60 * 60);
     const timeScore = 1 / (1 + ageInHours);
@@ -41,6 +42,7 @@ class AlgorithmService {
     const likeScore = wind.likes.length / 100;
     const isFollowed = following.includes(wind.userId) ? 1 : 0;
     const isSelf = wind.userId === userId ? 1 : 0;
+    const isVerified = wind.badge === 'verified' ? 1 : 0;
 
     let locationScore = 0;
     if (userLocation && windUserLocation) {
@@ -48,14 +50,15 @@ class AlgorithmService {
             userLocation.lat, userLocation.lon,
             windUserLocation.lat, windUserLocation.lon
         );
-        locationScore = Math.exp(-distance / 1000); // Exponential decay based on distance
+        locationScore = Math.exp(-distance / 1000);
     }
 
     return (timeScore * timeWeight) + 
            (likeScore * likeWeight) + 
            (isFollowed * followWeight) +
            (isSelf * selfWeight) +
-           (locationScore * locationWeight);
+           (locationScore * locationWeight) +
+           (isVerified * verifiedWeight);
   }
 }
 

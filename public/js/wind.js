@@ -17,6 +17,7 @@ function createWindElement(wind) {
 	windElement.className = 'wind';
 	
 	const loggedInUsername = getLoggedInUsername();
+	const formattedContent = formatUserMentions(wind.content, loggedInUsername, wind.username, wind.badge);
 	const isOwner = wind.username === loggedInUsername;
 	const isLiked = wind.isLiked;
 	const timestamp = new Date(wind.timestamp);
@@ -26,7 +27,7 @@ function createWindElement(wind) {
 		year: 'numeric',
 		hour: 'numeric',
 		minute: '2-digit',
-		hour12: true
+			hour12: true
 	});
 	
 	windElement.innerHTML = `
@@ -37,11 +38,11 @@ function createWindElement(wind) {
 					<a href="/profile?username=${wind.username}">
 						<div class="name-badge-container">
 							<span class="display-name">${wind.displayName}</span>
-							<div class="user-badges">
+              				<div class="user-badges">
 								${wind.badge ? `<img src="/img/${wind.badge}.svg" alt="${wind.badge}" class="badge-icon" title="${wind.badge}" />` : ''}
 							</div>
 						</div>
-						<span class="username">@${wind.username}</span>
+						${wind.username === 'admin' ? '' : `<span class="username">@${wind.username}</span>`}
 					</a>
 				</div>
 			</div>
@@ -56,7 +57,7 @@ function createWindElement(wind) {
 				</div>
 			` : ''}
 		</div>
-		<p>${wind.content}</p>
+		<p>${formattedContent}</p>
 		<div class="wind-actions">
 			<div class="like-action ${isLiked ? 'liked' : ''}">
 				<button class="like-btn">
@@ -70,7 +71,9 @@ function createWindElement(wind) {
 				</button>
 				<span class="replies-count">${wind.replies.length}</span>
 			</div>
-			<span>${formattedDate}</span>
+			<div class="timestamp-action">
+				<span>${formattedDate}</span>
+			</div>
 		</div>
 	`;
 	
@@ -224,13 +227,33 @@ async function postWind(content) {
 	}
 
 	try {
+		let location = null;
+		
+		if ("geolocation" in navigator) {
+			try {
+				const position = await new Promise((resolve, reject) => {
+					navigator.geolocation.getCurrentPosition(resolve, reject);
+				});
+				
+				location = {
+					lat: position.coords.latitude,
+					lon: position.coords.longitude
+				};
+			} catch (error) {
+				console.log('Location access denied or error:', error);
+			}
+		}
+
 		const response = await fetch('/api/winds', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${token}`
 			},
-			body: JSON.stringify({ content })
+			body: JSON.stringify({ 
+				content,
+				location 
+			})
 		});
 
 		if (!response.ok) throw new Error('Failed to post wind');
@@ -251,3 +274,23 @@ document.getElementById('post-wind').addEventListener('click', () => {
 });
 
 document.addEventListener('DOMContentLoaded', loadFeed);
+
+function sanitizeContent(content, username, badge) {
+	if (badge?.toLowerCase() === 'administrator') return content;
+	
+	const sanitized = content.replace(/<[^>]*>/g, '');
+	if (content !== sanitized) {
+		console.log(`Sanitized HTML from user ${username}:`);
+		console.log('Original:', content);
+		console.log('Sanitized:', sanitized);
+	}
+	return sanitized;
+}
+
+function formatUserMentions(content, currentUsername, authorUsername, authorBadge) {
+	content = sanitizeContent(content, authorUsername, authorBadge);
+	return content.replace(/@(\w+)/g, (match, username) => {
+		const isSelf = username === currentUsername;
+		return `<a href="/profile?username=${username}" class="mention${isSelf ? ' mention-self' : ''}">${match}</a>`;
+	});
+}
